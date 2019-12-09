@@ -1,23 +1,48 @@
-import socket
+import asyncio
 
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 1373         # Port to listen on (non-privileged ports are > 1023)
+groups = {}
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen()
-    conn, addr = s.accept()
-    with conn:
-        print('Connected by', addr)
-        while True:
-            while True:
-                print('--------------')
-                data = conn.recv(1024)
-                print(data.decode())
-                if data.decode() == 'end':
-                    break
-            while True:
-                data = input('to send : ')
-                conn.sendall(data.encode())
-                if data == 'end':
-                    break
+async def handle_echo(reader, writer):
+    while True:
+        # Read one line, where “line” is a sequence of bytes ending with \n.
+        data = await reader.readline()
+        try:
+            message = data.decode()  # Return a string decoded from the given bytes.
+        except:
+            writer.close()
+            return
+        # socket:
+        # 'peername': the remote address to which the socket is connected,
+        # result of socket.socket.getpeername() (None on error)
+        addr = writer.get_extra_info('peername')
+        # {..!r} Calls repr() on the argument first
+        print(f"Received {message!r} from {addr!r}")
+
+        scommand = message.split(maxsplit=1)
+        if len(scommand) == 1:
+            command = scommand
+        elif command == "quit":
+            writer.close()
+        else:
+            writer.close()
+            return
+
+async def main():
+    server = await asyncio.start_server(handle_echo, '127.0.0.1', 8888)
+
+    addr = server.sockets[0].getsockname()
+    print(f'Serving on {addr}')
+
+    async with server:
+        await server.serve_forever()
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        print('Bye Bye')
+
+
+        loop.close()
