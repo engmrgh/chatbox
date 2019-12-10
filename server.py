@@ -18,7 +18,7 @@ async def handle_echo(reader, writer):
         # {..!r} Calls repr() on the argument first
         print(f"Received {message!r} from {addr!r}")
 
-        scommand = message.split(maxsplit=1)
+        scommand = message.split(':')
         if len(scommand) == 1:
             command = scommand
         elif command == "quit":
