@@ -3,15 +3,22 @@ import asyncio
 groups = dict()
 
 
-async def join_group(gid, usr, writer):
+async def join_group(gid: int, usr: int, writer):
+    message = ""
     if gid in groups:
-        groups[gid].append(usr)
+        if usr in groups[gid]:
+            message = f"You are already a member of group {gid}"
+        else:
+            groups[gid].append(usr)
+            message = f"You have been added to group with id {gid}"
     else:
         groups[gid] = []
         groups[gid].append(usr)
-    message = f"You have been added to group with id {gid}"
+        message = f"Group {gid} has been created. And you have been added to the group"
     writer.write(message.encode())
+    await writer.drain()
     print(f"I have added usr {usr} to group with id {gid}")
+    print(groups)
     return
 
 
@@ -27,6 +34,13 @@ async def handle_echo(reader, writer):
             writer.close()
             return
 
+        # socket:
+        # 'peername': the remote address to which the socket is connected,
+        # result of socket.socket.getpeername() (None on error)
+        addr = writer.get_extra_info('peername')
+        # {..!r} Calls repr() on the argument first
+        print(f"Received {message!r} from {addr!r}")
+
         statement_length = len(message.split(' '))
 
         if statement_length == 1:
@@ -38,11 +52,13 @@ async def handle_echo(reader, writer):
                 writer.write(err_message)
                 await writer.drain()
         elif statement_length == 2:
-            pmsg = message.split('') # parted message
+            pmsg = message.split(' ')  # parted message
             if pmsg[0].lower() == "leave".lower():
                 pass
             if pmsg[0].lower() == "join".lower():
-                pass
+                gid = int(pmsg[1])
+                usr = addr
+                await join_group(gid=gid, usr=usr, writer=writer)
             pass
         elif statement_length == 3:
             pmsg = message.split('') # parted message
@@ -54,12 +70,6 @@ async def handle_echo(reader, writer):
             err_message = err_message.encode()
             writer.write(err_message)
             await writer.drain()
-        # socket:
-        # 'peername': the remote address to which the socket is connected,
-        # result of socket.socket.getpeername() (None on error)
-        addr = writer.get_extra_info('peername')
-        # {..!r} Calls repr() on the argument first
-        print(f"Received {message!r} from {addr!r}")
 
 
 async def main():
