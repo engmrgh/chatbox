@@ -21,7 +21,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print("Err 504. Server is not responding. Can't send message.")
             socket_is_ok = False
 
-        data = s.recv(1024)
-        if data:
-            print("Server said: " ,end='')
-            print(data.decode())
+        while data != "done":
+            data = s.recv(1024)
+            data = data.decode()
+            if data != "done":
+                print("Server said: " ,end='')
+                print(data)

@@ -1,5 +1,6 @@
 import asyncio, socket
 from datetime import datetime
+from time import sleep
 
 groups = dict()
 connections = dict()
@@ -60,9 +61,9 @@ async def send_group(gid: int, msg: str, writer):
                 continue
             w.write(msg.encode())
             await w.drain()
-        message = f"Message successfully send"
+        message = f"Message successfully send\n"
     else:
-        message = f"Group {gid} does not exist"
+        message = f"Group {gid} does not exist\n"
     writer.write(message.encode())
     await writer.drain()
     if added:
@@ -74,12 +75,14 @@ async def send_group(gid: int, msg: str, writer):
 
 
 async def quit_app(usr, writer):
+    to_be_deleted = []
     for gid in groups:
-        print("working")
         if usr in groups[gid]:
-            await leave_group(gid=gid, usr=usr, writer=writer)
-    writer.write("deleted".encode())
-    print("deleted")
+            to_be_deleted.append(gid)
+    for val in to_be_deleted:
+        await leave_group(val, usr, writer)
+    writer.write("Your account has been deleted.".encode())
+    print(f"I deleted user account {usr}")
     await writer.drain()
     del connections[usr]
     return
@@ -111,16 +114,17 @@ async def handle_echo(reader, writer):
         statement_length = len(message.split(' '))
 
         if statement_length == 1:
-            print("here")
+
             if message.lower() == "quit\n".lower():
-                print("going to run quit")
                 await quit_app(usr=addr, writer=writer)
-            if message == '\n':
+            elif message == '\n':
                 err_message = "Type a statement please"
                 err_message = err_message.encode()
                 writer.write(err_message)
                 await writer.drain()
+
         elif statement_length == 2:
+
             pmsg = message.split(' ')  # parted message
             if pmsg[0].lower() == "leave".lower():
                 gid = int(pmsg[1])
@@ -135,17 +139,22 @@ async def handle_echo(reader, writer):
                 err_message = err_message.encode()
                 writer.write(err_message)
                 await writer.drain()
+
         elif statement_length == 3:
-            pmsg = message.split(' ') # parted message
+            pmsg = message.split(' ')  # parted message
             if pmsg[0].lower() == "send".lower():
                 gid = int(pmsg[1])
                 msg = pmsg[2]
                 await send_group(gid=gid, msg=msg, writer=writer)
+
         else:
             err_message = "Didn't understand statement" + message
             err_message = err_message.encode()
             writer.write(err_message)
             await writer.drain()
+        sleep(0.2)  # This is just for having a nice look and feel
+        writer.write("done".encode())
+        await writer.drain()
 
 
 async def main():
