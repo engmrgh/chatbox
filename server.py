@@ -4,7 +4,8 @@ from datetime import datetime
 groups = dict()
 connections = dict()
 
-async def join_group(gid: int, usr, writer):
+
+async def join_group(gid: int, usr, writer):  # TODO: user join group
     message = ""
     if gid in groups:
         if usr in groups[gid]:
@@ -23,7 +24,7 @@ async def join_group(gid: int, usr, writer):
     return
 
 
-async def leave_group(gid: int, usr, writer):
+async def leave_group(gid: int, usr, writer):  # TODO: user left group
     message = ""
     deleted = False
     if gid in groups:
@@ -69,6 +70,19 @@ async def send_group(gid: int, msg: str, writer):
     else:
         print(f"Message was not added to grp_msg")
     print(connections)
+    return
+
+
+async def quit_app(usr, writer):
+    for gid in groups:
+        print("working")
+        if usr in groups[gid]:
+            await leave_group(gid=gid, usr=usr, writer=writer)
+    writer.write("deleted".encode())
+    print("deleted")
+    await writer.drain()
+    del connections[usr]
+    return
 
 
 async def handle_echo(reader, writer):
@@ -97,8 +111,10 @@ async def handle_echo(reader, writer):
         statement_length = len(message.split(' '))
 
         if statement_length == 1:
-            if message.lower() == "quit".lower():
-                pass
+            print("here")
+            if message.lower() == "quit\n".lower():
+                print("going to run quit")
+                await quit_app(usr=addr, writer=writer)
             if message == '\n':
                 err_message = "Type a statement please"
                 err_message = err_message.encode()
