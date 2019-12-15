@@ -1,20 +1,19 @@
-import asyncio
+import socket
 
+HOST = '127.0.0.1'  # The server's hostname or IP address
+PORT = 8888         # The port used by the server
 
-async def tcp_echo_client(message, loop):
-    reader, writer = await asyncio.open_connection('127.0.0.1', 8888)
-
-    print('Send:%r' % message)
-    writer.write(message.encode())
-
-    data = await reader.read(100)
-    print('Received: %r' % data.decode())
-
-    print('Close the socket')
-    writer.close()
-
-
-message = 'Hello World!\n'
-loop = asyncio.get_event_loop()
-loop.run_until_complete(tcp_echo_client(message, loop))
-loop.close()
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    while True:
+        while True:
+            data = input('> ')
+            data += '\n'
+            s.sendall(data.encode())
+            if data == 'end':
+                break
+        while True:
+            data = s.recv(1024)
+            print(data.decode())
+            if data.decode() == 'end':
+                break

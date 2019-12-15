@@ -1,11 +1,28 @@
 import asyncio
 
-groups = {}
+groups = dict()
+
+
+async def join_group(gid, usr, writer):
+    if gid in groups:
+        groups[gid].append(usr)
+    else:
+        groups[gid] = []
+        groups[gid].append(usr)
+    message = f"You have been added to group with id {gid}"
+    writer.write(message.encode())
+    print(f"I have added usr {usr} to group with id {gid}")
+    return
+
 
 async def handle_echo(reader, writer):
     while True:
         # Read one line, where “line” is a sequence of bytes ending with \n.
         data = await reader.readline()
+        if reader.at_eof():
+            return
+        if data.decode() == "end\n":
+            return
         try:
             message = data.decode()  # Return a string decoded from the given bytes.
         except:
@@ -18,14 +35,6 @@ async def handle_echo(reader, writer):
         # {..!r} Calls repr() on the argument first
         print(f"Received {message!r} from {addr!r}")
 
-        scommand = message.split(':')
-        if len(scommand) == 1:
-            command = scommand
-        elif command == "quit":
-            writer.close()
-        else:
-            writer.close()
-            return
 
 async def main():
     server = await asyncio.start_server(handle_echo, '127.0.0.1', 8888)
@@ -43,6 +52,5 @@ if __name__ == '__main__':
         loop.run_until_complete(main())
     except KeyboardInterrupt:
         print('Bye Bye')
-
 
         loop.close()
