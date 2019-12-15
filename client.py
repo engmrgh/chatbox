@@ -4,15 +4,27 @@ HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 8888         # The port used by the server
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, PORT))
-    while True:
-        while True:
+    socket_is_ok = True  # The socket is okay and running
+
+    try:
+        s.connect((HOST, PORT))
+    except ConnectionRefusedError:
+        print("Err 504. Server is not responding.")
+        socket_is_ok = False
+
+    while socket_is_ok:
+        while socket_is_ok:
             data = input('> ')
             data += '\n'
-            s.sendall(data.encode())
+            try:
+                s.sendall(data.encode())
+            except BrokenPipeError:
+                print("Err 504. Server is not responding.")
+                socket_is_ok = False
             if data == 'end':
                 break
-        while True:
+
+        while socket_is_ok:
             data = s.recv(1024)
             print(data.decode())
             if data.decode() == 'end':
