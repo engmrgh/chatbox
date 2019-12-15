@@ -82,12 +82,15 @@ async def handle_echo(reader, writer):
                 gid = int(pmsg[1])
                 usr = addr
                 await leave_group(gid=gid, usr=usr, writer=writer)
-                pass
-            if pmsg[0].lower() == "join".lower():
+            elif pmsg[0].lower() == "join".lower():
                 gid = int(pmsg[1])
                 usr = addr
                 await join_group(gid=gid, usr=usr, writer=writer)
-            pass
+            else:
+                err_message = "Didn't understant statement " + message
+                err_message = err_message.encode()
+                writer.write(err_message)
+                await writer.drain()
         elif statement_length == 3:
             pmsg = message.split('') # parted message
             if pmsg[0].lower() == "send".lower():
