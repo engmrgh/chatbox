@@ -21,13 +21,39 @@ async def handle_echo(reader, writer):
         data = await reader.readline()
         if reader.at_eof():
             return
-        if data.decode() == "end\n":
-            return
         try:
             message = data.decode()  # Return a string decoded from the given bytes.
         except:
             writer.close()
             return
+
+        statement_length = len(message.split(' '))
+
+        if statement_length == 1:
+            if message.lower() == "quit".lower():
+                pass
+            if message == '\n':
+                err_message = "Type a statement please"
+                err_message = err_message.encode()
+                writer.write(err_message)
+                await writer.drain()
+        elif statement_length == 2:
+            pmsg = message.split('') # parted message
+            if pmsg[0].lower() == "leave".lower():
+                pass
+            if pmsg[0].lower() == "join".lower():
+                pass
+            pass
+        elif statement_length == 3:
+            pmsg = message.split('') # parted message
+            if pmsg[0].lower() == "send".lower():
+                pass
+            pass
+        else:
+            err_message = "Didn't understand statement" + message
+            err_message = err_message.encode()
+            writer.write(err_message)
+            await writer.drain()
         # socket:
         # 'peername': the remote address to which the socket is connected,
         # result of socket.socket.getpeername() (None on error)

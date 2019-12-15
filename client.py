@@ -13,19 +13,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         socket_is_ok = False
 
     while socket_is_ok:
-        while socket_is_ok:
-            data = input('> ')
-            data += '\n'
-            try:
-                s.sendall(data.encode())
-            except BrokenPipeError:
-                print("Err 504. Server is not responding. Can't send message.")
-                socket_is_ok = False
-            if data == 'end':
-                break
+        data = input('> ')
+        data += '\n'
+        try:
+            s.sendall(data.encode())
+        except BrokenPipeError:
+            print("Err 504. Server is not responding. Can't send message.")
+            socket_is_ok = False
 
-        while socket_is_ok:
-            data = s.recv(1024)
+        data = s.recv(1024)
+        if data:
+            print("Server said: " ,end='')
             print(data.decode())
-            if data.decode() == 'end':
-                break
