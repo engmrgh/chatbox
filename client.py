@@ -19,7 +19,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 s.sendall(data.encode())
             except BrokenPipeError:
-                print("Err 504. Server is not responding.")
+                print("Err 504. Server is not responding. Can't send message.")
                 socket_is_ok = False
             if data == 'end':
                 break
