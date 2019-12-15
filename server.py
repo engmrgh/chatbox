@@ -3,7 +3,7 @@ import asyncio
 groups = dict()
 
 
-async def join_group(gid: int, usr: int, writer):
+async def join_group(gid: int, usr, writer):
     message = ""
     if gid in groups:
         if usr in groups[gid]:
@@ -18,6 +18,31 @@ async def join_group(gid: int, usr: int, writer):
     writer.write(message.encode())
     await writer.drain()
     print(f"I have added usr {usr} to group with id {gid}")
+    print(groups)
+    return
+
+
+async def leave_group(gid: int, usr, writer):
+    message = ""
+    deleted = False
+    if gid in groups:
+        if usr in groups[gid]:
+            groups[gid].remove(usr)
+            message = f"Successfully left the group {gid}"
+            deleted = True
+            if not groups[gid]:  # if group was empty destroy it
+                del groups[gid]
+                print(f"Group {gid} successfully destroyed")
+        else:
+            message = f"You are already out of group {gid}"
+    else:
+        message = f"Group with {gid} does not exist"
+    writer.write(message.encode())
+    await writer.drain()
+    if deleted:
+        print(f"I have removed usr {usr} from group with id {gid}")
+    else:
+        print(f"Request didn't change groups status")
     print(groups)
     return
 
@@ -54,6 +79,9 @@ async def handle_echo(reader, writer):
         elif statement_length == 2:
             pmsg = message.split(' ')  # parted message
             if pmsg[0].lower() == "leave".lower():
+                gid = int(pmsg[1])
+                usr = addr
+                await leave_group(gid=gid, usr=usr, writer=writer)
                 pass
             if pmsg[0].lower() == "join".lower():
                 gid = int(pmsg[1])
