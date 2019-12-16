@@ -4,8 +4,7 @@ import sys
 
 HOST = '127.0.0.1'  # The server's hostname or IP address
 PORT = 8888         # The port used by the server
-socket_is_ok = True # The socket is okay and running
-lock = threading.Lock()
+socket_is_ok = True  # The socket is okay and running
 
 
 def client_to_server(s: socket):
