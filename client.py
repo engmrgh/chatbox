@@ -11,38 +11,29 @@ lock = threading.Lock()
 def client_to_server(s: socket):
     global socket_is_ok
     data = "start"
-    try:
-        while data != "quit" and socket_is_ok:
-            data = input('> ')
-            data += '\n'
-            try:
-                s.sendall(data.encode())
-            except BrokenPipeError:
-                print("Err 504. Server is not responding. Can't send message.")
-                socket_is_ok = False
-                return
-    except KeyboardInterrupt:
-        print("Bye")
-        socket_is_ok = False
-        return
+    while data != "quit" and socket_is_ok:
+        data = input('> ')
+        data += '\n'
+        try:
+            s.sendall(data.encode())
+        except BrokenPipeError:
+            print("Err 504. Server is not responding. Can't send message.")
+            socket_is_ok = False
+            return
 
 
 def server_to_client(s: socket):
     global socket_is_ok
-    try:
-        while socket_is_ok:
-            data = s.recv(1024)
-            data = data.decode()
-            if data != "done":
-                sys.stdout.write('\b')
-                print("---", end='')
-                print(data, end='')
-                print("---<")
-                sys.stdout.write("> ")
-                sys.stdout.flush()
-    except KeyboardInterrupt:
-        socket_is_ok = False
-        return
+    while socket_is_ok:
+        data = s.recv(1024)
+        data = data.decode()
+        if data != "done":
+            sys.stdout.write('\b')
+            print("---", end='')
+            print(data, end='')
+            print("---<")
+            sys.stdout.write("> ")
+            sys.stdout.flush()
 
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
