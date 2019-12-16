@@ -50,20 +50,21 @@ async def leave_group(gid: int, usr, writer):  # TODO: user left group
     return
 
 
-async def send_group(gid: int, msg: str, writer):
+async def send_group(gid: int, msg: str, writer, usr):
     message = ""
     added = False
     now = datetime.now()
     if gid in groups:
         for user in groups[gid]:
             w = connections[user][1]  # In the connections dictionary get the value of 3th index in which writer is in there
-            if w == writer:
+            if user == usr:
                 continue
+            msg = str(usr) + ":" + msg[:-1]
             w.write(msg.encode())
             await w.drain()
-        message = f"Message successfully send\n"
+        message = f"Message successfully send"
     else:
-        message = f"Group {gid} does not exist\n"
+        message = f"Group {gid} does not exist"
     writer.write(message.encode())
     await writer.drain()
     if added:
@@ -140,12 +141,12 @@ async def handle_echo(reader, writer):
                 writer.write(err_message)
                 await writer.drain()
 
-        elif statement_length == 3:
+        elif statement_length >= 3:
             pmsg = message.split(' ')  # parted message
             if pmsg[0].lower() == "send".lower():
                 gid = int(pmsg[1])
                 msg = pmsg[2]
-                await send_group(gid=gid, msg=msg, writer=writer)
+                await send_group(gid=gid, msg=msg, writer=writer, usr=addr)
 
         else:
             err_message = "Didn't understand statement" + message
