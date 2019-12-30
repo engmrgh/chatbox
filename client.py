@@ -28,9 +28,10 @@ def server_to_client(s: socket):
         data = data.decode()
         if data != "done":
             sys.stdout.write('\b')
+            sys.stdout.write('\b')
             print("---", end='')
             print(data, end='')
-            print("---<")
+            print("---")
             sys.stdout.write("> ")
             sys.stdout.flush()
 

@@ -54,15 +54,20 @@ async def send_group(gid: int, msg: str, writer, usr):
     message = ""
     added = False
     now = datetime.now()
+    msg = str(usr) + ":" + msg
+    if '\n' in msg:
+        msg.replace('\n', '')
     if gid in groups:
-        for user in groups[gid]:
-            w = connections[user][1]  # In the connections dictionary get the value of 3th index in which writer is in there
-            if user == usr:
-                continue
-            msg = str(usr) + ":" + msg[:-1]
-            w.write(msg.encode())
-            await w.drain()
-        message = f"Message successfully send"
+        if usr in groups[gid]:
+            for user in groups[gid]:
+                w = connections[user][1]  # In the connections dictionary get the value of 3th index in which writer is in there
+                if user == usr:
+                    continue
+                w.write(msg.encode())
+                await w.drain()
+            message = f"Message successfully send"
+        else:
+            message = f"You are not member of group #{gid}"
     else:
         message = f"Group {gid} does not exist"
     writer.write(message.encode())
@@ -71,7 +76,6 @@ async def send_group(gid: int, msg: str, writer, usr):
         print(f"I have added message {msg} to group with id {gid} on {now}")
     else:
         print(f"Message was not added to grp_msg")
-    print(connections)
     return
 
 
@@ -123,6 +127,11 @@ async def handle_echo(reader, writer):
                 err_message = err_message.encode()
                 writer.write(err_message)
                 await writer.drain()
+            else:
+                err_message = "Didn't understand statement " + message[:-1]
+                err_message = err_message.encode()
+                writer.write(err_message)
+                await writer.drain()
 
         elif statement_length == 2:
 
@@ -142,20 +151,17 @@ async def handle_echo(reader, writer):
                 await writer.drain()
 
         elif statement_length >= 3:
+            message = message[:-1]
             pmsg = message.split(' ')  # parted message
             if pmsg[0].lower() == "send".lower():
                 gid = int(pmsg[1])
-                msg = pmsg[2]
+                msg = ' '.join(pmsg[1:])
                 await send_group(gid=gid, msg=msg, writer=writer, usr=addr)
-
-        else:
-            err_message = "Didn't understand statement" + message
-            err_message = err_message.encode()
-            writer.write(err_message)
-            await writer.drain()
-        sleep(0.2)  # This is just for having a nice look and feel
-        writer.write("done".encode())
-        await writer.drain()
+            else:
+                err_message = "Didn't understand statement " + message[:-1]
+                err_message = err_message.encode()
+                writer.write(err_message)
+                await writer.drain()
 
 
 async def main():
